@@ -167,4 +167,7 @@ const DEFAULT_SUPPLY_ROUTES = [
   },
 ];
 
-module.exports = { DEFAULT_SUPPLY_NODES, DEFAULT_SUPPLY_ROUTES };
+module.exports = {
+  DEFAULT_SUPPLY_NODES,
+  DEFAULT_SUPPLY_ROUTES,
+};

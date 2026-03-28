@@ -59,10 +59,10 @@ export const INITIAL_DISRUPTIONS = [
 export const SIM_SCENARIOS = {
   typhoon: {
     label: 'Typhoon Strike', icon: '🌀',
-    disruption: { type: 'Typhoon Warning', location: 'South China Sea', severity: 10, color: 'red', affectedNodes: ['n1','n4','n5'], skus: ['P100','P200','P300','P400'], revenueAtRisk: 6800000, delay: 21 },
+    disruption: { type: 'Typhoon Warning', location: 'Bhopal', severity: 10, color: 'red', affectedNodes: ['n1','n4','n5'], skus: ['P100','P200','P300','P400'], revenueAtRisk: 6800000, delay: 21 },
     reasoning: [
-      { agent: 'Detection', icon: 'D', text: 'ALERT: Typhoon Haikui · Cat-4 · Landfall ETA 18h · South China Sea', color: 'red' },
-      { agent: 'Detection', icon: 'D', text: 'Severity: 10/10 · Type: WEATHER_EXTREME · Affected corridor: Shanghai–LA', color: 'red' },
+      { agent: 'Detection', icon: 'D', text: 'ALERT: Typhoon Kolkata · Cat-4 · Landfall ETA 18h · South India', color: 'red' },
+      { agent: 'Detection', icon: 'D', text: 'Severity: 10/10 · Type: WEATHER_EXTREME · Affected corridor: Shimla', color: 'red' },
       { agent: 'Impact',    icon: 'I', text: 'Modeling: 14 routes disrupted · 8 suppliers affected · 7–21 day delays', color: 'amber' },
       { agent: 'Impact',    icon: 'I', text: 'Revenue at risk: $6.8M · Critical SKUs: 22 · Stock-out risk in 18 days', color: 'amber' },
       { agent: 'Decision',  icon: 'Dc', text: 'Pre-emptive reroute required. Issuing emergency orders before landfall...', color: 'teal' },
@@ -72,9 +72,9 @@ export const SIM_SCENARIOS = {
   },
   port_strike: {
     label: 'Port Strike', icon: '🚢',
-    disruption: { type: 'Port Strike', location: 'Los Angeles, CA', severity: 8, color: 'red', affectedNodes: ['n8','n9'], skus: ['P100','P200'], revenueAtRisk: 3100000, delay: 10 },
+    disruption: { type: 'Port Strike', location: 'Madhya Pradesh', severity: 8, color: 'red', affectedNodes: ['n8','n9'], skus: ['P100','P200'], revenueAtRisk: 3100000, delay: 10 },
     reasoning: [
-      { agent: 'Detection', icon: 'D', text: 'ALERT: Labour union vote — Port of LA strike · 72h notice issued', color: 'red' },
+      { agent: 'Detection', icon: 'D', text: 'ALERT: Labour union vote — Port of strike · 72h notice issued', color: 'red' },
       { agent: 'Detection', icon: 'D', text: 'Severity: 8/10 · Type: PORT_STRIKE · Confidence: 0.87', color: 'red' },
       { agent: 'Impact',    icon: 'I', text: 'Impact: 340 TEUs in transit · LA-bound cargo blocked · 12 customers affected', color: 'amber' },
       { agent: 'Decision',  icon: 'Dc', text: 'Diverting to Port of Long Beach · +1 day · $22k vs $3.1M delay cost', color: 'teal' },
@@ -118,3 +118,96 @@ export const DEFAULT_REASONING = [
   { agent: 'Decision',  icon: 'Dc', text: 'Selecting: Option 1 — Reroute via Ningbo · Best cost-delay tradeoff · Confidence 0.91', color: 'teal' },
   { agent: 'Action',    icon: 'A', text: '✓ Route updated via Ningbo API · ETA recalculated · Stakeholders notified', color: 'green', done: true },
 ]
+
+export function createSupplyChainStore() {
+  let state = {
+    nodes: NODES,
+    routes: ROUTES,
+    disruptions: INITIAL_DISRUPTIONS,
+    scenario: null,
+  };
+
+  let listeners = [];
+
+  const emit = () => {
+    listeners.forEach((l) => l(state));
+  };
+
+  return {
+    // Get current state
+    getState: () => state,
+
+    // Subscribe (REALTIME CORE)
+    subscribe: (fn) => {
+      listeners.push(fn);
+      fn(state);
+      return () => {
+        listeners = listeners.filter((l) => l !== fn);
+      };
+    },
+
+    // Update nodes (realtime hook point)
+    updateNodes: (newNodes) => {
+      state = { ...state, nodes: newNodes };
+      emit();
+    },
+
+    // Update routes
+    updateRoutes: (newRoutes) => {
+      state = { ...state, routes: newRoutes };
+      emit();
+    },
+
+    // Push disruption event (REALTIME EVENT INJECTION)
+    addDisruption: (disruption) => {
+      state = {
+        ...state,
+        disruptions: [disruption, ...state.disruptions],
+      };
+      emit();
+    },
+
+    // Apply scenario (AI / simulation layer)
+    runScenario: (scenario) => {
+      state = {
+        ...state,
+        scenario,
+      };
+      emit();
+    },
+
+    // Reset system
+    reset: () => {
+      state = {
+        nodes: NODES,
+        routes: ROUTES,
+        disruptions: INITIAL_DISRUPTIONS,
+        scenario: null,
+      };
+      emit();
+    },
+  };
+}
+
+// ======================
+// OPTIONAL: MOCK REALTIME STREAM (for testing)
+// ======================
+
+export function startMockRealtime(store) {
+  setInterval(() => {
+    const randomNodeIndex = Math.floor(Math.random() * NODES.length);
+
+    const updatedNodes = store.getState().nodes.map((n, i) => {
+      if (i === randomNodeIndex) {
+        return {
+          ...n,
+          risk: Math.min(1, Math.random()),
+          status: Math.random() > 0.7 ? 'warning' : 'ok',
+        };
+      }
+      return n;
+    });
+
+    store.updateNodes(updatedNodes);
+  }, 4000);
+}

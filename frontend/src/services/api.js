@@ -31,8 +31,11 @@ async function request(path, { method = 'GET', body, user } = {}) {
   return res.json()
 }
 
-export function getDashboard(user) {
-  return request('/api/dashboard', { user })
+export async function getDashboard(user) {
+  const res = await fetch(
+    `http://localhost:4000/api/dashboard?userId=${user.id}`
+  )
+  return res.json()
 }
 
 export function getScenarios(user) {

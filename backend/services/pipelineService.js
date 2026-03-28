@@ -150,6 +150,26 @@ async function runPipeline({ userId, disruptionInput, io }) {
   await pause(300);
 
   const impact = estimateImpact({ userId, detection, disruptionInput, supplyNodes, supplyRoutes });
+  // 🔥 CASCADE EFFECT (CHAIN REACTION)
+let cascadedNodes = [...(impact.affectedNodes || [])];
+
+for (const nodeId of impact.affectedNodes || []) {
+  const connectedRoutes = supplyRoutes.filter(
+    (r) => r.fromNodeId === nodeId || r.toNodeId === nodeId
+  );
+
+  connectedRoutes.forEach((route) => {
+    cascadedNodes.push(route.fromNodeId);
+    cascadedNodes.push(route.toNodeId);
+  });
+}
+
+// remove duplicates
+cascadedNodes = [...new Set(cascadedNodes)];
+
+// override affected nodes
+impact.affectedNodes = cascadedNodes;
+  
   const impactAudit = await saveAudit({
     userId,
     disruptionId: disruption._id,

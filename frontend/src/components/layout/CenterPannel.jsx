@@ -1,8 +1,10 @@
 import SupplyMap from '../map/SupplyMap'
-import SimBar from '../simulation/SimBar'
+// ❌ REMOVE THIS IMPORT
+// import SimBar from '../simulation/SimBar'
+
 import { useStore } from '../../store/useStore'
 
-export default function CenterPanel() {
+export default function CenterPannel() {
   const disruptions = useStore(s => s.disruptions)
   const activeDisruptionId = useStore(s => s.activeDisruptionId)
   const supplyNodes = useStore(s => s.supplyNodes)
@@ -13,6 +15,7 @@ export default function CenterPanel() {
 
   return (
     <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
+      
       {/* Map legend */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 16,
@@ -31,22 +34,21 @@ export default function CenterPanel() {
             <span style={{ fontSize: 10, color: 'var(--text3)' }}>{label}</span>
           </div>
         ))}
-        <div style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--text3)' }}>
-          {highlightNodes.length > 0 && (
-            <span style={{ color: 'var(--amber)' }}>
-              {highlightNodes.length} nodes affected
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Map */}
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
-        <SupplyMap highlightNodes={highlightNodes} nodes={supplyNodes} routes={supplyRoutes} />
+        <SupplyMap 
+          highlightNodes={highlightNodes} 
+          nodes={supplyNodes} 
+          routes={supplyRoutes} 
+          disruption={activeDisruption}   
+        />
       </div>
 
-      {/* Simulate bar */}
-      <SimBar />
+      {/* ❌ REMOVE THIS PART */}
+      {/* <SimBar /> */}
+
     </main>
   )
 }
